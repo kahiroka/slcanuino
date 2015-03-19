@@ -17,13 +17,16 @@ https://www.sparkfun.com/products/10039
 Burn your Arduino with this and install can-utils for your linux environment in advance.
 
 setup:
-    $ sudo slcan\_attach -f -s6 -o /dev/ttyUSB0
-    $ sudo slcand -S 1000000 ttyUSB0 can0
-    $ sudo ifconfig can0 up
+
+    $ sudo slcan\_attach -f -s6 -o /dev/ttyUSB0  
+    $ sudo slcand -S 1000000 ttyUSB0 can0  
+    $ sudo ifconfig can0 up  
 
 then,
+
     $ candump can0
 
 cleanup:
-    $ sudo ifconfig can0 down
-    $ sudo killall slcand
+
+    $ sudo ifconfig can0 down  
+    $ sudo killall slcand  
