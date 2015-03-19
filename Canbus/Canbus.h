@@ -10,6 +10,7 @@
 #define CANSPEED_125 	7		// CAN speed at 125 kbps
 #define CANSPEED_250  	3		// CAN speed at 250 kbps
 #define CANSPEED_500	1		// CAN speed at 500 kbps
+#define CANSPEED_1000	0		// CAN speed at 1000 kbps
 
 
 #define ENGINE_COOLANT_TEMP 0x05
@@ -31,6 +32,9 @@ class CanbusClass
 	char message_tx(void);
 	char message_rx(unsigned char *buffer);
 	char ecu_req(unsigned char pid,  char *buffer);
+	// more general methods
+	char message_tx(tCAN *msg);
+	char message_rx(tCAN *msg);
 private:
 	
 };

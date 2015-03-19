@@ -44,8 +44,10 @@ extern "C"
 typedef struct
 {
 	uint16_t id;
+	uint16_t ide;
 	struct {
 		int8_t rtr : 1;
+		int8_t ide : 1;
 		uint8_t length : 4;
 	} header;
 	uint8_t data[8];

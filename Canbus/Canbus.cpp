@@ -61,6 +61,18 @@ char CanbusClass::message_rx(unsigned char *buffer) {
 
 }
 
+char CanbusClass::message_rx(tCAN *msg) {
+		tCAN message;
+
+		if (mcp2515_check_message()) {
+			if (mcp2515_get_message(&message)) {
+				*msg = message;
+				return 1;
+			}
+		}
+		return 0;
+}
+
 char CanbusClass::message_tx(void) {
 	tCAN message;
 
@@ -95,6 +107,19 @@ char CanbusClass::message_tx(void) {
 	}
 return 1;
  
+}
+
+char CanbusClass::message_tx(tCAN *msg) {
+	tCAN message;
+
+	message = *msg;
+	mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+
+	if (mcp2515_send_message(&message)) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 char CanbusClass::ecu_req(unsigned char pid,  char *buffer) 

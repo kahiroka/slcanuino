@@ -240,17 +240,28 @@ uint8_t mcp2515_get_message(tCAN *message)
 	spi_putc(addr);
 	
 	// read id
-	message->id  = (uint16_t) spi_putc(0xff) << 3;
-	message->id |=            spi_putc(0xff) >> 5;
-	
-	spi_putc(0xff);
-	spi_putc(0xff);
+	if (bit_is_set(status,4)) {
+		uint16_t tmp;
+		message->id   = (uint16_t) spi_putc(0xff) << 5;
+		tmp = spi_putc(0xff);
+		message->id  |= ((tmp >> 3) & 0x1c) | (tmp & 0x03);
+		message->ide  = (uint16_t) spi_putc(0xff) << 8;
+		message->ide |=            spi_putc(0xff) << 0;
+
+	} else {
+		message->id  = (uint32_t) spi_putc(0xff) << 3;
+		message->id |=            spi_putc(0xff) >> 5;
+
+		spi_putc(0xff);
+		spi_putc(0xff);
+	}
 	
 	// read DLC
 	uint8_t length = spi_putc(0xff) & 0x0f;
 	
 	message->header.length = length;
 	message->header.rtr = (bit_is_set(status, 3)) ? 1 : 0;
+	message->header.ide = (bit_is_set(status, 4)) ? 1 : 0;
 	
 	// read data
 	for (t=0;t<length;t++) {
@@ -300,12 +311,18 @@ uint8_t mcp2515_send_message(tCAN *message)
 	
 	RESET(MCP2515_CS);
 	spi_putc(SPI_WRITE_TX | address);
-	
-	spi_putc(message->id >> 3);
-    spi_putc(message->id << 5);
-	
-	spi_putc(0);
-	spi_putc(0);
+
+	if (message->header.ide) {
+		spi_putc(message->id >> 5);
+		spi_putc(((message->id << 3) & 0xe0) | (1<<EXIDE) | (message->id & 0x03));
+		spi_putc(message->ide >> 8);
+		spi_putc(message->ide & 0xff);
+	} else {
+		spi_putc(message->id >> 3);
+		spi_putc(message->id << 5);
+		spi_putc(0);
+		spi_putc(0);
+	}
 	
 	uint8_t length = message->header.length & 0x0f;
 	
