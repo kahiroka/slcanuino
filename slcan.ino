@@ -164,8 +164,11 @@ void pars_slcancmd(char *buf)
         case '0': // 10k
         case '1': // 20k
         case '2': // 50k
-        case '3': // 100k
           slcan_nack();
+          break;
+        case '3': // 100k
+          g_can_speed = CANSPEED_100;
+          slcan_ack();
           break;
         case '4': // 125k
           g_can_speed = CANSPEED_125;
