@@ -16,15 +16,15 @@ https://www.sparkfun.com/products/10039
 
 Burn your Arduino with this and install can-utils for your linux environment in advance.
 
-# Deps
+## Deps
 1. slcan (kernel module)
 2. SocketCAN (http://www.pengutronix.de/software/libsocketcan/)
 3. can-utils (https://github.com/linux-can/can-utils)
 
 
-setup:
+## Setup
 
-    $ sudo slcan\_attach -f -s6 -o /dev/ttyUSB0  
+    $ sudo slcan_attach -f -s6 -o /dev/ttyUSB0  
     $ sudo slcand -S 1000000 ttyUSB0 can0  
     $ sudo ifconfig can0 up  
 
@@ -32,7 +32,7 @@ then,
 
     $ candump can0
 
-cleanup:
+## Cleanup
 
     $ sudo ifconfig can0 down  
     $ sudo killall slcand  
