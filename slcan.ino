@@ -30,9 +30,10 @@ void xfer_can2tty()
   char buf[CMD_LEN];
   int i;
   static uint16_t ts = 0;
-  char *p = buf;
+  char *p;
 
   while (Canbus.message_rx(&msg)) {
+    p = buf;
     if (msg.header.ide) {
       if (msg.header.rtr) {
         sprintf(p, "R%04X%04X%01d", msg.id, msg.ide, msg.header.length);
