@@ -15,12 +15,46 @@ int g_ts_en = 0;
 void setup() {
   pinMode(LED_OPEN, OUTPUT);
   pinMode(LED_ERR, OUTPUT);
-  Serial.begin(1000000); // select from 115200,500000,1000000
+  Serial.begin(1000000); // select from 115200,500000,1000000,2000000
   if (Canbus.init(g_can_speed)) {
     digitalWrite(LED_ERR, LOW);
   } else {
     digitalWrite(LED_ERR, HIGH);
   }
+}
+
+int b2ahex(char *p, uint8_t s, uint8_t n, void *v)
+{
+  char *hex = "0123456789ABCDEF";
+
+  if (s == 1) {
+    uint8_t *tmp = v;
+    for (int i=0; i<n; i++) {
+      *p++ = hex[tmp[i] & 0x0f];
+    }
+  } else if (s == 2) {
+    uint8_t *tmp = v;
+    for (int i=0; i<n; i++) {
+      *p++ = hex[(tmp[i] >> 4) & 0x0f];
+      *p++ = hex[tmp[i] & 0x0f];
+    }
+  } else if (s == 3) {
+    uint16_t *tmp = v;
+    for (int i=0; i<n; i++) {
+      *p++ = hex[(tmp[i] >> 8) & 0x0f];
+      *p++ = hex[(tmp[i] >> 4) & 0x0f];
+      *p++ = hex[tmp[i] & 0x0f];
+    }
+  } else if (s == 4) {
+    uint16_t *tmp = v;
+    for (int i=0; i<n; i++) {
+      *p++ = hex[(tmp[i] >> 12) & 0x0f];
+      *p++ = hex[(tmp[i] >> 8) & 0x0f];
+      *p++ = hex[(tmp[i] >> 4) & 0x0f];
+      *p++ = hex[tmp[i] & 0x0f];
+    }
+  }
+  return s*n;
 }
 
 // transfer messages from CAN bus to host
@@ -31,37 +65,40 @@ void xfer_can2tty()
   int i;
   static uint16_t ts = 0;
   char *p;
+  uint8_t len;
 
   while (Canbus.message_rx(&msg)) {
     p = buf;
     if (msg.header.ide) {
       if (msg.header.rtr) {
-        sprintf(p, "R%04X%04X%01d", msg.id, msg.ide, msg.header.length);
+        *p++ = 'R';
       } else {
-        sprintf(p, "T%04X%04X%01d", msg.id, msg.ide, msg.header.length);
+        *p++ = 'T';
       }
-      p += 10;
+      p += b2ahex(p, 4, 1, &msg.id);
+      p += b2ahex(p, 4, 1, &msg.ide);
+      len = msg.header.length % 10;
+      p += b2ahex(p, 1, 1, &len);
     } else {
       if (msg.header.rtr) {
-        sprintf(p, "r%03X%01X", msg.id, msg.header.length);
+        *p++ = 'r';
       } else {
-        sprintf(p, "t%03X%01X", msg.id, msg.header.length);
+        *p++ = 't';
       }
-      p += 5;
+      p += b2ahex(p, 3, 1, &msg.id);
+      len = msg.header.length;
+      p += b2ahex(p, 1, 1, &len);
     }
-    for (i = 0; i < msg.header.length; i++) {
-      sprintf(p + (i * 2), "%02X", msg.data[i]);
-    }
-    p += i * 2;
+
+    p += b2ahex(p, 2, msg.header.length, msg.data);
 
     // insert timestamp if needed
     if (g_ts_en) {
-      sprintf(p, "%04X", ts++); // up to 60,000ms
-      p += 4;
+      p += b2ahex(p, 4, 1, ts++); // up to 60,000ms
     }
 
-    *(p++) = '\r';
-    *(p++) = '\0';
+    *p++ = '\r';
+    *p++ = '\0';
     Serial.print(buf);
   }
 }
