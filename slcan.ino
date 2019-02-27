@@ -25,28 +25,28 @@ void setup() {
 
 int b2ahex(char *p, uint8_t s, uint8_t n, void *v)
 {
-  char *hex = "0123456789ABCDEF";
+  const char *hex = "0123456789ABCDEF";
 
   if (s == 1) {
-    uint8_t *tmp = v;
+    uint8_t *tmp = (uint8_t *)v;
     for (int i=0; i<n; i++) {
       *p++ = hex[tmp[i] & 0x0f];
     }
   } else if (s == 2) {
-    uint8_t *tmp = v;
+    uint8_t *tmp = (uint8_t *)v;
     for (int i=0; i<n; i++) {
       *p++ = hex[(tmp[i] >> 4) & 0x0f];
       *p++ = hex[tmp[i] & 0x0f];
     }
   } else if (s == 3) {
-    uint16_t *tmp = v;
+    uint16_t *tmp = (uint16_t *)v;
     for (int i=0; i<n; i++) {
       *p++ = hex[(tmp[i] >> 8) & 0x0f];
       *p++ = hex[(tmp[i] >> 4) & 0x0f];
       *p++ = hex[tmp[i] & 0x0f];
     }
   } else if (s == 4) {
-    uint16_t *tmp = v;
+    uint16_t *tmp = (uint16_t *)v;
     for (int i=0; i<n; i++) {
       *p++ = hex[(tmp[i] >> 12) & 0x0f];
       *p++ = hex[(tmp[i] >> 8) & 0x0f];
@@ -94,7 +94,8 @@ void xfer_can2tty()
 
     // insert timestamp if needed
     if (g_ts_en) {
-      p += b2ahex(p, 4, 1, ts++); // up to 60,000ms
+      p += b2ahex(p, 4, 1, &ts); // up to 60,000ms
+      ts++;
     }
 
     *p++ = '\r';
