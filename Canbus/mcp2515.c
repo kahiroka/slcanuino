@@ -128,6 +128,7 @@ uint8_t mcp2515_init(uint8_t speed)
 	RESET(P_MOSI);
 	RESET(P_MISO);
 	
+	SET_OUTPUT(P_SS); // Slave Select should be set always as OUTPUT
 	SET_OUTPUT(P_SCK);
 	SET_OUTPUT(P_MOSI);
 	SET_INPUT(P_MISO);
