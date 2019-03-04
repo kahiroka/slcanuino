@@ -11,6 +11,10 @@ I tested this sketch on the following 'CAN-BUS Shield'.
 
 https://www.sparkfun.com/products/10039
 
+If you are using SeeedStudio's one with its default setting please modify MCP2515_CS 'B,2' with 'B,1' in 'Canbus/defaults.h'.
+
+http://wiki.seeedstudio.com/CAN-BUS_Shield_V2.0/
+
 
 # How to use
 
@@ -21,8 +25,12 @@ Burn your Arduino with this and install can-utils for your linux environment in 
 2. SocketCAN (http://www.pengutronix.de/software/libsocketcan/)
 3. can-utils (https://github.com/linux-can/can-utils)
 
+or just install can-utils package.
+
+    $ sudo apt install can-utils
 
 ## Setup
+Please replace ttyUSB with ttyACM in case of using Arduino Uno.
 
     $ sudo slcan_attach -f -s6 -o /dev/ttyUSB0  
     $ sudo slcand -S 1000000 ttyUSB0 can0  
