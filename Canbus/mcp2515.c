@@ -342,7 +342,7 @@ uint8_t mcp2515_send_message(tCAN *message)
 	}
 	SET(MCP2515_CS);
 	
-	_delay_us(1);
+	asm volatile("nop");
 	
 	// send message
 	RESET(MCP2515_CS);

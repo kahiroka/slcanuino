@@ -113,7 +113,7 @@ char CanbusClass::message_tx(tCAN *msg) {
 	tCAN message;
 
 	message = *msg;
-	mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
+	//mcp2515_bit_modify(CANCTRL, (1<<REQOP2)|(1<<REQOP1)|(1<<REQOP0), 0);
 
 	if (mcp2515_send_message(&message)) {
 		return 1;

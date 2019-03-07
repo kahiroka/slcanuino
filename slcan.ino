@@ -57,6 +57,48 @@ int b2ahex(char *p, uint8_t s, uint8_t n, void *v)
   return s*n;
 }
 
+int a2bhex_sub(char a)
+{
+  int val = 0;
+
+  if ('0' <= a && a <= '9') {
+    val = a - '0';
+  } else if ('A' <= a && a <= 'F') {
+    val = a - 'A' + 10;
+  } else if ('a' <= a && a <= 'f') {
+    val = a - 'a' + 10;
+  }
+  return val;
+}
+
+int a2bhex(char *p, uint8_t s, uint8_t n, void *v)
+{
+  int i, j;
+  char buf[4+1];
+  int val;
+
+  if (s == 1 || s == 2)  {
+    uint8_t *tmp = (uint8_t *)v;
+    for (i=0; i<n; i++) {
+      val = 0;
+      for (j=0; j<s; j++) {
+        val = (val << 4) | a2bhex_sub(*p++);
+      }
+      *tmp++ = val;
+    }
+  } else if (s == 3 || s == 4) {
+    uint16_t *tmp = (uint16_t *)v;
+    for (i=0; i<n; i++) {
+      val = 0;
+      for (j=0; j<s; j++) {
+        val = (val << 4) | a2bhex_sub(*p++);
+      }
+      *tmp++ = val;
+    }
+  }
+  return n;
+}
+
 // transfer messages from CAN bus to host
 void xfer_can2tty()
 {
@@ -118,40 +160,35 @@ void send_canmsg(char *buf)
 {
   tCAN msg;
   int len = strlen(buf) - 1;
-  int val, vale;
+  uint16_t id[2];
+  uint8_t hlen;
   int is_eff = buf[0] & 0x20 ? 0 : 1;
   int is_rtr = buf[0] & 0x02 ? 1 : 0;
 
   if (!is_eff && len >= 4) { // SFF
-    sscanf(&buf[1], "%03x", &val);
-    msg.id = val;
+    a2bhex(&buf[1], 3, 1, id);
+    msg.id = id[0];
     msg.header.rtr = is_rtr;
     msg.header.ide = 0;
-    sscanf(&buf[4], "%01x", &val);
-    msg.header.length = val;
+    a2bhex(&buf[4], 1, 1, &hlen);
+    msg.header.length = hlen;
     if (len - 4 - 1 == msg.header.length * 2) {
-      for (int i = 0; i < msg.header.length; i++) {
-        sscanf(&buf[5 + (i * 2)], "%02x", &val);
-        msg.data[i] = val;
-      }
+      a2bhex(&buf[5], 2, msg.header.length, msg.data);
+      while (!Canbus.message_tx(&msg)) ;
     }
-    Canbus.message_tx(&msg);
 
   } else if (is_eff && len >= 9) { // EFF
-    sscanf(&buf[1], "%04x%04x", &val, &vale);
-    msg.id = val & 0x1fff;
-    msg.ide = vale;
+    a2bhex(&buf[1], 4, 2, id);
+    msg.id = id[0] & 0x1fff;
+    msg.ide = id[1];
     msg.header.rtr = is_rtr;
     msg.header.ide = 1;
-    sscanf(&buf[9], "%01x", &val);
-    msg.header.length = val;
+    a2bhex(&buf[9], 1, 1, &hlen);
+    msg.header.length = hlen;
     if (len - 9 - 1 == msg.header.length * 2) {
-      for (int i = 0; i < msg.header.length; i++) {
-        sscanf(&buf[10 + (i * 2)], "%02x", &val);
-        msg.data[i] = val;
-      }
+      a2bhex(&buf[10], 2, msg.header.length, msg.data);
+      while (!Canbus.message_tx(&msg)) ;
     }
-    Canbus.message_tx(&msg);
   }
 }
 
